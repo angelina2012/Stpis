@@ -1,0 +1,1620 @@
+package com.example.server_auto.LogikServer;
+
+import com.example.server_auto.BD.Logic_db;
+import com.example.server_auto.Model.User;
+import org.springframework.web.bind.annotation.*;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/")
+public class Authorization {
+
+                     // адрес для авторизаци
+    @GetMapping("/authorization/{login}/{password}/{role}")
+    Optional<User> getAutoria(@PathVariable String login, @PathVariable String password, @PathVariable String role){
+        //Хэширование пароля
+        System.out.println(login + " " + password + " " + role);
+        MessageDigest md= null;
+        try {
+            md = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            //System.out.println("1: "  + e.getMessage());
+        }
+        //System.out.println("*");
+        md.update(password.getBytes());
+        String resultpas=new String(md.digest());
+
+        ArrayList<User> users= Logic_db.Authorization();
+        //System.out.println("size: " + users.size());
+        for(User user : users){
+            //System.out.println("!");
+            System.out.println(resultpas.equals(user.getPassword()));
+            System.out.println(resultpas);
+            System.out.println(user.getPassword());
+            System.out.println();
+
+            if(login.equals(user.getLogin()) && resultpas.equals(user.getPassword()) && role.equals(user.getRole())) {
+                // в случае успешной авторизации возврощаем объект входящего пользователя в виде json
+                System.out.println("!!!!!!");
+                return Optional.of(user);
+            }
+        }
+        // в случае не коректных даных возврощаем пустой объект
+        return Optional.empty();
+    }
+}
+package com.example.server_auto.LogikServer;
+
+
+import com.example.server_auto.BD.Logic_db;
+import com.example.server_auto.Model.Auto;
+import org.springframework.web.bind.annotation.*;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+
+@RestController
+@RequestMapping("/")
+public class Servlet_auto {
+
+    // получение из БД всех автомобилей
+    @GetMapping("/Servlet_auto")
+    Iterable<Auto> doGet() {
+        // возвращаем все объекты автомобилей в формате json
+        return Logic_db.autos();
+    }
+
+    //добавляем aвто
+    // на вход отпровляем в виде json объект автомобиля который нужно добавить
+    @PostMapping("/Servlet_auto")
+    void doPost(@RequestBody Auto auto) {
+
+        try {
+            Logic_db.add_auto(auto.getModel_auto(), auto.getYear_of_product(), auto.getProbeg(), auto.getGruzopod(),auto.getToplivo(), auto.getReg_nomer());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+
+    }
+
+    //редактирование авто
+    // на вход отпровляем в виде json объект автомобиля который нужно редактировать
+    @PutMapping("/Servlet_auto")
+    void doPut(@RequestBody Auto auto) {
+
+        try {
+            Logic_db.edit_auto(auto.getModel_auto(), auto.getYear_of_product(), auto.getProbeg(), auto.getGruzopod(),auto.getToplivo(), auto.getReg_nomer(), auto.getId_car());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //удаление авто
+    // на вход отпровляем id автомобиля который нужно удалить
+    @DeleteMapping("/Servlet_auto/{id}")
+    void doDelete(@PathVariable int id) {
+
+        try {
+            Logic_db.delete_auto(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+package com.example.server_auto.LogikServer;
+
+import com.example.server_auto.BD.Logic_db;
+
+import com.example.server_auto.BD.Manager_db;
+import com.example.server_auto.Model.Cargo;
+import org.springframework.web.bind.annotation.*;
+
+import java.sql.SQLException;
+
+@RestController
+@RequestMapping("/")
+public class Servlet_cargo {
+
+    // получение из БД всех грузов
+    @GetMapping("/Servlet_cargo")
+    Iterable<Cargo> doGet() {
+        // возвращаем все объекты грузов в формате json
+        return Manager_db.cargos();
+    }
+
+    //добавляем груз
+    // на вход отпровляем в виде json объект груза который нужно добавить
+    @PostMapping("/Servlet_cargo")
+    void doPost(@RequestBody Cargo cargo) {
+        try {
+            Manager_db.add_cargo(cargo.getGruz_name(), cargo.getDanger(), cargo.getPrice(), cargo.getVolume());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    //редактирование груза
+    // на вход отпровляем в виде json объект груза который нужно редактировать
+    @PutMapping("/Servlet_cargo")
+    void doPut(@RequestBody Cargo cargo) {
+
+        try {
+            Manager_db.edit_cargo(cargo.getGruz_name(), cargo.getDanger(), cargo.getPrice(), cargo.getVolume(), cargo.getId_gruz());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //удаление груза
+    // на вход отпровляем id груза который нужно удалить
+    @DeleteMapping("/Servlet_cargo/{id}")
+    void doDelete(@PathVariable int id) {
+
+        try {
+            Manager_db.delete_cargo(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+package com.example.server_auto.LogikServer;
+
+import com.example.server_auto.BD.Manager_db;
+import com.example.server_auto.Model.Client;
+import org.springframework.web.bind.annotation.*;
+
+import java.sql.SQLException;
+
+@RestController
+@RequestMapping("/")
+public class Servlet_client {
+
+    // получение из БД всех
+    @GetMapping("/Servlet_client")
+    Iterable<Client> doGet() {
+        // возвращаем все объекты клиента в формате json
+        return Manager_db.clients();
+    }
+
+    //добавляем клиента
+    // на вход отпровляем в виде json объект клиента который нужно добавить
+    @PostMapping("/Servlet_client")
+    void doPost(@RequestBody Client client) {
+        try {
+            Manager_db.add_client(client.getClient_name(), client.getTelephone(), client.getVid_deyat());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    //редактирование клиента
+    // на вход отпровляем в виде json объект клиента который нужно редактировать
+    @PutMapping("/Servlet_client")
+    void doPut(@RequestBody Client client) {
+
+        try {
+            Manager_db.edit_client(client.getClient_name(), client.getTelephone(), client.getVid_deyat(), client.getId_client());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //удаление клиента
+    // на вход отпровляем id клиента который нужно удалить
+    @DeleteMapping("/Servlet_client/{id}")
+    void doDelete(@PathVariable int id) {
+
+        try {
+            Manager_db.delete_client(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+}
+package com.example.server_auto.LogikServer;
+
+import com.example.server_auto.BD.Logic_db;
+import com.example.server_auto.Model.Driver;
+import org.springframework.web.bind.annotation.*;
+
+import java.sql.SQLException;
+
+@RestController
+@RequestMapping("/")
+public class Servlet_driver {
+    // получение из БД всех водителей
+    @GetMapping("/Servlet_driver")
+    Iterable<Driver> doGet() {
+        // возвращаем все объекты  в формате json
+        return Logic_db.drivers();
+    }
+
+    //добавляем водителя
+    // на вход отпровляем в виде json объект водителя который нужно добавить
+    @PostMapping("/Servlet_driver")
+    void doPost(@RequestBody Driver driver) {
+        try {
+            Logic_db.add_driver(driver.getFio(),driver.getCategory(),driver.getStazh());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    //редактирование водителя
+    // на вход отпровляем в виде json объект водителя  который нужно редактировать
+    @PutMapping("/Servlet_driver")
+    void doPut(@RequestBody Driver driver ) {
+
+        try {
+            Logic_db.edit_driver(driver.getId_driver(), driver.getFio(),driver.getCategory(),driver.getStazh());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //удаление водителя
+    // на вход отпровляем id водителя который нужно удалить
+    @DeleteMapping("/Servlet_driver/{id}")
+    void doDelete(@PathVariable int id) {
+
+        try {
+            Logic_db.delete_driver(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+package com.example.server_auto.LogikServer;
+
+import com.example.server_auto.BD.Logic_db;
+import com.example.server_auto.Model.Gruzchik;
+import org.springframework.web.bind.annotation.*;
+
+import java.sql.SQLException;
+
+@RestController
+@RequestMapping("/")
+public class Servlet_gruzchik {
+    // получение из БД всех грузчиков
+    @GetMapping("/Servlet_gruzchik")
+    Iterable<Gruzchik> doGet() {
+        // возвращаем все объекты  в формате json
+        return Logic_db.gruzchiks();
+    }
+
+    //добавляем грузчика
+    // на вход отпровляем в виде json объект грузчика который нужно добавить
+    @PostMapping("/Servlet_gruzchik")
+    void doPost(@RequestBody Gruzchik gruzchik) {
+        try {
+            Logic_db.add_gruzch(gruzchik.getFio(), gruzchik.getAge(), gruzchik.getAktivnost());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    //редактирование грузчика
+    // на вход отпровляем в виде json объект грузчика который нужно редактировать
+    @PutMapping("/Servlet_gruzchik")
+    void doPut(@RequestBody Gruzchik gruzchik ) {
+
+        try {
+            Logic_db.edit_gruzch(gruzchik.getFio(), gruzchik.getAge(), gruzchik.getAktivnost(), gruzchik.getId_gruzchik());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //удаление грузчика
+    // на вход отпровляем id грузчика который нужно удалить
+    @DeleteMapping("/Servlet_gruzchik/{id}")
+    void doDelete(@PathVariable int id) {
+
+        try {
+            Logic_db.delete_gruzch(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+package com.example.server_auto.LogikServer;
+
+import com.example.server_auto.BD.Manager_db;
+import com.example.server_auto.Model.Request;
+import org.springframework.web.bind.annotation.*;
+
+import java.sql.SQLException;
+
+@RestController
+@RequestMapping("/")
+public class Servlet_request {
+    // получение из БД всех запросов
+    @GetMapping("/Servlet_request")
+    Iterable<Request> doGet() {
+        // возвращаем все объекты  в формате json
+        return Manager_db.requests();
+    }
+
+    //добавляем запроса
+    // на вход отпровляем в виде json объект запроса который нужно добавить
+    @PostMapping("/Servlet_request")
+    void doPost(@RequestBody Request request ) {
+        try {
+            Manager_db.add_request(request.getDate_depart(),request.getDate_arrived(),request.getVolume(),request.getPrice(),request.getStatus(),request.getId_gruz());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    //редактирование запроса
+    // на вход отпровляем в виде json объект запроса который нужно редактировать
+    @PutMapping("/Servlet_request")
+    void doPut(@RequestBody Request request) {
+
+        try {
+            Manager_db.edit_request(request.getDate_depart(),request.getDate_arrived(),request.getVolume(),request.getPrice(),request.getStatus(),request.getId_gruz(),request.getId_request());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //удаление запроса
+    // на вход отпровляем id запроса который нужно удалить
+    @DeleteMapping("/Servlet_request/{id}")
+    void doDelete(@PathVariable int id) {
+
+        try {
+            Manager_db.delete_request(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+package com.example.server_auto.LogikServer;
+
+import com.example.server_auto.BD.Manager_db;
+import com.example.server_auto.Model.Route;
+import org.springframework.web.bind.annotation.*;
+
+import java.sql.SQLException;
+
+@RestController
+@RequestMapping("/")
+public class Servlet_route {
+    // получение из БД всех маршрутов
+    @GetMapping("/Servlet_route")
+    Iterable<Route> doGet() {
+        // возвращаем все объекты  в формате json
+        return Manager_db.routes();
+    }
+
+    //добавляем маршрут
+    // на вход отпровляем в виде json объект маршрут  который нужно добавить
+    @PostMapping("/Servlet_route")
+    void doPost(@RequestBody Route route) {
+        try {
+            Manager_db.add_route(route.getPunkt_a(),route.getPunkt_b(),route.getDistance());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    //редактирование маршрута
+    // на вход отпровляем в виде json объект маршрута который нужно редактировать
+    @PutMapping("/Servlet_route")
+    void doPut(@RequestBody Route route) {
+
+        try {
+            Manager_db.edit_route(route.getPunkt_a(),route.getPunkt_b(),route.getDistance(), route.getId_route());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //удаление маршрута
+    // на вход отпровляем id маршрута который нужно удалить
+    @DeleteMapping("/Servlet_route/{id}")
+    void doDelete(@PathVariable int id) {
+
+        try {
+            Manager_db.delete_route(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+package com.example.server_auto.LogikServer;
+
+import com.example.server_auto.BD.Manager_db;
+import com.example.server_auto.Model.Shipment;
+import org.springframework.web.bind.annotation.*;
+
+import java.sql.SQLException;
+
+@RestController
+@RequestMapping("/")
+public class Servlet_shipment {
+    // получение из БД всех отгрузок
+    @GetMapping("/Servlet_shipment")
+    Iterable<Shipment> doGet() {
+        // возвращаем все объекты  в формате json
+        return Manager_db.shipment();
+    }
+
+    //добавляем отгрузку
+    // на вход отпровляем в виде json объект отгрузки который нужно добавить
+    @PostMapping("/Servlet_shipment")
+    void doPost(@RequestBody Shipment shipment) {
+        try {
+            Manager_db.add_shipment(shipment.getDate_shipment() ,shipment.getId_shipping(),shipment.getId_loader());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    //редактирование отгрузки
+    // на вход отпровляем в виде json объект отгрузки который нужно редактировать
+    @PutMapping("/Servlet_shipment")
+    void doPut(@RequestBody Shipment shipment) {
+
+        try {
+            Manager_db.edit_shipment(shipment.getId_shipment(), shipment.getDate_shipment() ,shipment.getId_shipping(),shipment.getId_loader());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //удаление отгрузки
+    // на вход отпровляем id отгрузки который нужно удалить
+    @DeleteMapping("/Servlet_shipment/{id}")
+    void doDelete(@PathVariable int id) {
+
+        try {
+            Manager_db.delete_shipment(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+package com.example.server_auto.LogikServer;
+
+import com.example.server_auto.BD.Manager_db;
+import com.example.server_auto.Model.Shipping;
+import org.springframework.web.bind.annotation.*;
+
+import java.sql.SQLException;
+
+@RestController
+@RequestMapping("/")
+public class Servlet_shipping {
+    // получение из БД всех перевозок
+    @GetMapping("/Servlet_shipping")
+    Iterable<Shipping> doGet() {
+        // возвращаем все объекты  в формате json
+        return Manager_db.shippings();
+    }
+
+    //добавляем перевозку
+    // на вход отпровляем в виде json объект перевозки который нужно добавить
+    @PostMapping("/Servlet_shipping")
+    void doPost(@RequestBody Shipping shipping) {
+        try {
+            Manager_db.add_shipping(shipping.getId_route(),shipping.getId_cargo(),shipping.getId_client(),shipping.getId_driver(),shipping.getId_car());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    //редактирование перевозки
+    // на вход отпровляем в виде json объект перевозки который нужно редактировать
+    @PutMapping("/Servlet_shipping")
+    void doPut(@RequestBody Shipping shipping) {
+
+        try {
+            Manager_db.edit_shipping(shipping.getId_route(),shipping.getId_cargo(),shipping.getId_client(),shipping.getId_driver(),shipping.getId_car(), shipping.getId_shipping());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //удаление перевозки
+    // на вход отпровляем id перевозки который нужно удалить
+    @DeleteMapping("/Servlet_shipping/{id}")
+    void doDelete(@PathVariable int id) {
+
+        try {
+            Manager_db.delete_shipping(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+package com.example.server_auto.LogikServer;
+
+import com.example.server_auto.BD.Logic_db;
+import com.example.server_auto.Model.User;
+import org.springframework.web.bind.annotation.*;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.SQLException;
+
+@RestController
+@RequestMapping("/")
+public class Servlet_user {
+    // получение из БД всех пользователей
+    @GetMapping("/Servlet_user")
+    Iterable<User> doGet() {
+        // возвращаем все объекты  в формате json
+        return Logic_db.users ();
+    }
+
+    //добавляем пользователя
+    // на вход отпровляем в виде json объект пользователя  который нужно добавить
+    @PostMapping("/Servlet_user")
+    void doPost(@RequestBody User user) {
+        //Хэширование пароля
+        MessageDigest md= null;
+        System.out.println("*");
+        try {
+            md = MessageDigest.getInstance("SHA-256");
+            System.out.println("**");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            System.out.println("1: " + e.getMessage());
+        }
+        System.out.println("***");
+        md.update(user.getPassword().getBytes());
+        System.out.println("****");
+        String passw=new String(md.digest());
+
+        try {
+            System.out.println("**!");
+            Logic_db.add_user(user.getLogin(), passw, user.getRole());
+            System.out.println("**!!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("2: " + e.getMessage());
+        }
+    }
+
+    //редактирование пользователя
+    // на вход отпровляем в виде json объект пользователя  который нужно редактировать
+    @PutMapping("/Servlet_user")
+    void doPut(@RequestBody User user) {
+
+        //Хэширование пароля
+        MessageDigest md= null;
+        try {
+            md = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        md.update(user.getPassword().getBytes());
+        String passw=new String(md.digest());
+
+        try {
+            Logic_db.edit_user(user.getId_vhod(), user.getLogin(), passw, user.getRole());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //удаление пользователя
+    // на вход отпровляем id пользователя который нужно удалить
+    @DeleteMapping("/Servlet_user/{id}")
+    void doDelete(@PathVariable int id) {
+
+        try {
+            Logic_db.delete_user(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+package com.example.server_auto.BD;
+
+/*import com.example.server_auto.Model.Auto;
+import com.example.server_auto.Model.Gruzchik;
+import com.example.server_auto.Model.User;
+import com.example.server_auto.Model.Driver;*/
+import com.example.server_auto.Model.*;
+import com.example.server_auto.Model.Driver;
+
+import java.sql.*;
+import java.text.DateFormat;
+import java.util.ArrayList;
+//применяем синглтон паттерн
+public class Logic_db {
+    //создаем приватное статическое поле содержащее одиночный объект этого класса
+    private static Logic_db instance;
+    //конструктор класса закрытый
+    private Logic_db(){
+
+    }
+    //создаем статический создающий метод , котор использ для получения одиночки
+    public static Logic_db getInstance(){
+        if (instance==null){
+            instance=new Logic_db();
+
+        }
+       return instance;
+    }
+
+        //ДОСТУП К БД
+        static String URL = "jdbc:mysql://localhost/gruzoperevozki";
+        static String username = "root";
+        static String password = "root";
+        // АВТОРИЗАЦИЯ
+        public static ArrayList<User> Authorization()  {
+            ArrayList <User> users=new ArrayList<User>();
+            Connection con = null;
+            try {
+                Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+                 con = DriverManager.getConnection(URL, username, password);
+                Statement stm = con.createStatement();
+                String sql = "SELECT login,password,role FROM entrance";
+                ResultSet result = stm.executeQuery(sql);
+                while (result.next()) {
+                    String login1 = result.getString(1);
+                    String password1 = result.getString(2);
+                    String rol1= result.getString(3);
+                    users.add(new User(login1,password1,rol1));
+                }
+                result.close();
+                stm.close();
+                con.close();
+            } catch (Exception ex) {
+
+                System.out.println("Выполнить транзакцию не удалось");
+                System.out.println(ex.getMessage());
+
+
+            }
+            return users;
+        }
+
+
+
+       /////////////ГРУЗЧИКИ
+        //ДОБАВЛЕНИЕ ГРУЗЧИКА
+        public static void add_gruzch(String fio,Integer age,String aktivnost) throws SQLException {
+
+            try {
+                Connection con = DriverManager.getConnection(URL, username, password);
+                Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+                Statement stm = con.createStatement();
+                String sql = "INSERT INTO loader (fio,age,activity) VALUES('" + fio + "'," + age + ",'"+ aktivnost + "')";
+                stm.executeUpdate(sql);
+            } catch (Exception ex) {
+                System.out.println("Выполнить транзакцию не удалось");
+                System.out.println(ex.getMessage());
+
+            }
+
+        }
+    //РЕДАКТИРОВАНИЕ ГРУЗЧИКА
+
+    public static void edit_gruzch(String fio,Integer age,String aktivnost,Integer id_gruzchik) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "UPDATE loader set fio = '" + fio + "', age=" + age + ", activity= '" + aktivnost +"' where id_loader=" + id_gruzchik +";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //УДАЛЕНИЕ ГРУЗЧИКА
+    public static void delete_gruzch(Integer id_gruzchik) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "Delete from loader where id_loader="+ id_gruzchik+";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+        //ВЫВОД(ПОЛУЧЕНИЕ) ГРУЗЧИКОВ
+
+    public static ArrayList<Gruzchik> gruzchiks() {
+        ArrayList<Gruzchik> gruzchiks=new ArrayList<Gruzchik>();
+        Connection con = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            con = DriverManager.getConnection(URL, username, password);
+            Statement stm = con.createStatement();
+            String sql = "SELECT id_loader,fio,age,activity FROM loader";
+            ResultSet result = stm.executeQuery(sql);
+            while (result.next()) {
+                Integer id_gruzchik = result.getInt(1);
+                String fio = result.getString(2);
+                Integer age = result.getInt(3);
+                String aktivnost= result.getString(4);
+
+               gruzchiks.add(new Gruzchik(fio,age,aktivnost,id_gruzchik));
+            }
+            result.close();
+            stm.close();
+            con.close();
+        } catch (Exception ex) {
+
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+
+        }
+        return gruzchiks;
+    }
+
+    /////////АВТО
+    //ДОБАВЛЕНИЕ АВТО
+    public static void add_auto(String model_auto,int year_of_product,int probeg,int gruzopod,Double toplivo,String reg_nomer) throws SQLException {
+        Connection con = DriverManager.getConnection(URL, username, password);
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "INSERT INTO auto (model_auto,year_of_product,mileage,carrying,fuel,reg_number) VALUES('" + model_auto + "'," + year_of_product + ","+ probeg + ","+ gruzopod +"," + toplivo + ",'"+ reg_nomer +"')";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+
+     //РЕДАКТИРОВАНИЕ АВТО
+
+    public static void edit_auto(String model_auto,int year_of_product,int probeg,int gruzopod,Double toplivo,String reg_nomer, int id_car) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "UPDATE auto set model_auto = '" + model_auto + "', year_of_product=" + year_of_product + ",mileage="+ probeg + ",carrying=" + gruzopod + ",fuel="+ toplivo +", reg_number='"+ reg_nomer +"' where id_car=" + id_car +";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //УДАЛЕНИЕ АВТО
+    public static void delete_auto(int id_car) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "Delete from auto where id_car="+ id_car+";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //ВЫВОД(ПОЛУЧЕНИЕ) АВТО
+
+    public static ArrayList<Auto> autos() {
+        ArrayList<Auto> autos=new ArrayList<Auto>();
+        Connection con = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            con = DriverManager.getConnection(URL, username, password);
+            Statement stm = con.createStatement();
+            String sql = "SELECT id_car,model_auto,year_of_product,mileage,carrying,fuel,reg_number FROM auto";
+            ResultSet result = stm.executeQuery(sql);
+            while (result.next()) {
+                Integer id_car = result.getInt(1);
+                String model_auto = result.getString(2);
+                Integer year_of_product = result.getInt(3);
+                Integer probeg= result.getInt(4);
+                Integer gruzopod= result.getInt(5);
+                Double toplivo= result.getDouble(6);
+                String reg_nomer=result.getString(7);
+                autos.add(new Auto(id_car,model_auto,year_of_product,probeg,gruzopod,toplivo,reg_nomer));
+            }
+            result.close();
+            stm.close();
+            con.close();
+        } catch (Exception ex) {
+
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+
+        }
+        return autos;
+    }
+    //////////ВОДИТЕЛИ
+    //РЕДАКТИРОВАНИЕ ВОДИТЕЛЯ
+
+    public static void edit_driver(int id_driver,String fio,String category,int stazh) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "UPDATE drivers set fio = '" + fio + "', experience=" + stazh + ", category= '" + category +"' where id_driver=" + id_driver +";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //ДОБАВЛЕНИЕ ВОДИТЕЛЯ
+    public static void add_driver(String fio,String category,int stazh) throws SQLException {
+        Connection con = DriverManager.getConnection(URL, username, password);
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "INSERT INTO drivers (fio,category,experience) VALUES('" + fio + "','" + category + "',"+ stazh + ")";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //УДАЛЕНИЕ ВОДИТЕЛЯ
+    public static void delete_driver(int id_driver) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "Delete from drivers where id_driver="+ id_driver+";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //ВЫВОД(ПОЛУЧЕНИЕ) ВОДИТЕЛЕЙ
+
+    public static ArrayList<Driver> drivers() {
+        ArrayList<Driver> drivers=new ArrayList<Driver>();
+        Connection con = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            con = DriverManager.getConnection(URL, username, password);
+            Statement stm = con.createStatement();
+            String sql = "SELECT id_driver,fio,category,experience FROM drivers";
+            ResultSet result = stm.executeQuery(sql);
+            while (result.next()) {
+                int id_driver = result.getInt(1);
+                String fio = result.getString(2);
+                String category = result.getString(3);
+                int stazh= result.getInt(4);
+
+                drivers.add(new Driver(id_driver,fio,category,stazh));
+            }
+            result.close();
+            stm.close();
+            con.close();
+        } catch (Exception ex) {
+
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+
+        }
+        return drivers;
+    }
+    //////////ПОЛЬЗОВАТЕЛИ
+    //ДОБАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯ
+    public static void add_user(String login,String pasword,String rol) throws SQLException {
+        Connection con = DriverManager.getConnection(URL, username, password);
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "INSERT INTO entrance (login,password,role) VALUES('" + login + "','" + pasword + "','"+ rol + "')";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+   //ВЫВОД(ПОЛУЧЕНИЕ) ПОЛЬЗОВАТЕЛЕЙ
+
+   public static ArrayList<User> users() {
+       ArrayList<User> users = new ArrayList<User>();
+       Connection con = null;
+       try {
+           Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+           con = DriverManager.getConnection(URL, username, password);
+           Statement stm = con.createStatement();
+           String sql = "SELECT id_entrance,login,password,role FROM entrance";
+           ResultSet result = stm.executeQuery(sql);
+           while (result.next()) {
+               Integer id_vhod = result.getInt(1);
+               String login = result.getString(2);
+               String pasword = result.getString(3);
+               String rol = result.getString(4);
+               users.add(new User(login, pasword, rol, id_vhod));
+           }
+           result.close();
+           stm.close();
+           con.close();
+       } catch (Exception ex) {
+
+           System.out.println("Выполнить транзакцию не удалось");
+           System.out.println(ex.getMessage());
+
+
+       }
+       return users;
+   }
+    //УДАЛЕНИЕ ПОЛЬЗОВАТЕЛЯ
+    public static void delete_user(int id_vhod) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "Delete  from entrance where id_entrance="+ id_vhod+";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //РЕДАКТИРОВАНИЕ ПОЛЬЗОВАТЕЛЯ
+
+    public static void edit_user(int id_vhod,String login,String pasword,String rol) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "UPDATE entrance set login = '" + login + "', password='" + pasword + "', role= '" + rol +"' where id_entrance=" + id_vhod +";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+
+}
+
+package com.example.server_auto.BD;
+
+import com.example.server_auto.Model.*;
+
+import java.sql.*;
+import java.text.DateFormat;
+import java.util.ArrayList;
+
+public class Manager_db {
+
+    //ДОСТУП К БД
+    static String URL = "jdbc:mysql://localhost/gruzoperevozki";
+    static String username = "root";
+    static String password = "root";
+
+    /////////////////////////КЛИЕНТЫ
+    //ДОБАВЛЕНИЕ КЛИЕНТА
+    public static void add_client(String client_name,String telephone,String vid_deyat) throws SQLException {
+        Connection con = DriverManager.getConnection(URL, username, password);
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "INSERT INTO client (client_name,telephone,kind_of_activity) VALUES('" + client_name + "','" + telephone + "','"+ vid_deyat + "')";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //РЕДАКТИРОВАНИЕ КЛИЕНТА
+
+    public static void edit_client(String client_name,String telephone,String vid_deyat,Integer id_client) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "UPDATE client set client_name = '" + client_name + "', telephone='" + telephone + "', kind_of_activity= '" + vid_deyat +"' where id_client=" + id_client +";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //УДАЛЕНИЕ КЛИЕНТА
+    public static void delete_client(Integer id_client) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "Delete  from client where id_client="+ id_client+";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //ВЫВОД КЛИЕНТОВ
+    public static ArrayList<Client> clients() {
+        ArrayList<Client> clients=new ArrayList<Client>();
+        Connection con = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            con = DriverManager.getConnection(URL, username, password);
+            Statement stm = con.createStatement();
+            String sql = "SELECT id_client,client_name,telephone,kind_of_activity FROM client";
+            ResultSet result = stm.executeQuery(sql);
+            while (result.next()) {
+                Integer id_client = result.getInt(1);
+                String client_name= result.getString(2);
+                String telephone= result.getString(3);
+                String vid_deyat= result.getString(4);
+                clients.add(new Client(client_name,telephone,vid_deyat,id_client));
+            }
+            result.close();
+            stm.close();
+            con.close();
+        } catch (Exception ex) {
+
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+
+        }
+        return clients;
+    }
+    ///////////////ЗАЯВКИ
+    //ВЫВОД ЗАЯВОК
+    public static ArrayList<Request> requests() {
+        ArrayList<Request> requests=new ArrayList<Request>();
+        Connection con = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            con = DriverManager.getConnection(URL, username, password);
+            Statement stm = con.createStatement();
+            String sql = "SELECT id_request,date_depart,date_arrived,volume,price,status,id_cargo FROM request";
+            ResultSet result = stm.executeQuery(sql);
+
+            while (result.next()) {
+                Integer id_request = result.getInt(1);
+                String date_depart = result.getString(2);
+                String date_arrived = result.getString(3);
+                Double volume = result.getDouble(4);
+                Double price = result.getDouble(5);
+                String status = result.getString(6);
+                int id_gruz = result.getInt(7);
+                /*String sql2 = "SELECT cargo_name from cargo where id_cargo= " + id_gruz + ";";
+                ResultSet result2 = stm.executeQuery(sql2);
+                while (result2.next()) {
+                    Integer id_req = result.getInt(1);
+                    String date_dep = result.getString(2);
+                    String date_ar = result.getString(3);
+                    Double volum = result.getDouble(4);
+                    Double pric = result.getDouble(5);
+                    String stat = result.getString(6);
+                    String  gruz = result.getString(7);
+
+
+
+                }*/
+                requests.add(new Request(id_request, date_depart, date_arrived, volume, price, status, id_gruz));
+            }
+            result.close();
+            stm.close();
+            con.close();
+        } catch (Exception ex) {
+
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+
+        }
+        return requests;
+    }
+    /// по имени груза возвращает id груза
+    public static Integer id_gruz_request(String name) throws SQLException {
+        Connection con = DriverManager.getConnection(URL, username, password);
+        Integer id_gruz=0;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "SELECT id_cargo  FROM cargo WHERE cargo_name='" + name + "'";
+            ResultSet result = stm.executeQuery(sql);
+            while (result.next()) {
+                id_gruz = result.getInt(1);
+
+            }
+            result.close();
+            stm.close();
+            con.close();
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+        }
+        return id_gruz;
+    }
+
+    //ДОБАВЛЕНИЕ ЗАЯВКИ
+    public static void add_request(String date_depart,String date_arrived,Double volume,Double price,String status,int id_gruz) throws SQLException {
+        Connection con = DriverManager.getConnection(URL, username, password);
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "INSERT INTO request (date_depart,date_arrived,volume,price,status,id_cargo) VALUES('" + date_depart + "','" + date_arrived + "',"+ volume + "," + price + ",'" + status +"'," + id_gruz + ");";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //РЕДАКТИРОВАНИЕ ЗАЯВКИ
+
+    public static void edit_request(String date_depart,String date_arrived,Double volume,Double price,String status,int id_gruz,Integer id_request) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "UPDATE request set date_depart = '" + date_depart + "', date_arrived='" + date_arrived + "', volume= " + volume + ",price=" + price + ",status='"+ status+ "',id_cargo=" + id_gruz + "  where id_request=" + id_request +";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    ////УДАЛЕНИЕ ЗАЯВКИ
+    public static void delete_request(Integer id_request) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "Delete  from request where id_request="+ id_request+";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    ////////////МАРШРУТЫ
+    //ДОБАВЛЕНИЕ МАРШРУТА
+    public static void add_route(String punkt_a,String punkt_b,int distance) throws SQLException {
+        Connection con = DriverManager.getConnection(URL, username, password);
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "INSERT INTO route (punkt_a,punkt_b,distance) VALUES('" + punkt_a + "','" + punkt_b + "',"+ distance + ")";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //РЕДАКТИРОВАНИЕ МАРШРУТА
+
+    public static void edit_route(String punkt_a,String punkt_b,int distance,Integer id_route) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "UPDATE route set punkt_a = '" + punkt_a + "', punkt_b='" + punkt_b + "', distance= " + distance + " where id_route=" + id_route + ";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //УДАЛЕНИЕ МАРШРУТА
+    public static void delete_route(Integer id_route) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "Delete  from route where id_route="+ id_route+";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //ВЫВОД МАРШРУТОВ
+    public static ArrayList<Route> routes() {
+        ArrayList<Route> routes=new ArrayList<Route>();
+        Connection con = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            con = DriverManager.getConnection(URL, username, password);
+            Statement stm = con.createStatement();
+            String sql = "SELECT id_route,punkt_a,punkt_b,distance FROM route";
+            ResultSet result = stm.executeQuery(sql);
+            while (result.next()) {
+                Integer id_route = result.getInt(1);
+                String punkt_a= result.getString(2);
+                String punkt_b= result.getString(3);
+                Integer distance= result.getInt(4);
+                routes.add(new Route(punkt_a,punkt_b,distance,id_route));
+            }
+            result.close();
+            stm.close();
+            con.close();
+        } catch (Exception ex) {
+
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+
+        }
+        return routes;
+    }
+    //////////////////ГРУЗ
+    //ДОБАВЛЕНИЕ ГРУЗА
+    public static void add_cargo(String gruz_name, String danger, double price, double volume) throws SQLException {
+        Connection con = DriverManager.getConnection(URL, username, password);
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "INSERT INTO cargo (cargo_name,danger,price,volume) VALUES('" + gruz_name + "','" + danger + "',"+ price + "," + volume + ")";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //РЕДАКТИРОВАНИЕ ГРУЗА
+
+    public static void edit_cargo(String gruz_name, String danger, double price, double volume, int id_gruz) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "UPDATE cargo set cargo_name = '" + gruz_name + "', danger='" + danger + "', price= " + price + ",volume=" + volume + " where id_cargo=" + id_gruz +";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //УДАЛЕНИЕ ГРУЗА
+    public static void delete_cargo(Integer id_gruz) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "Delete  from cargo where id_cargo="+ id_gruz+";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //ВЫВОД ГРУЗА
+    public static ArrayList<Cargo> cargos() {
+        ArrayList<Cargo> cargos=new ArrayList<Cargo>();
+        Connection con = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            con = DriverManager.getConnection(URL, username, password);
+            Statement stm = con.createStatement();
+            String sql = "SELECT id_cargo,cargo_name,danger,price,volume  FROM cargo";
+            ResultSet result = stm.executeQuery(sql);
+            while (result.next()) {
+                Integer id_gruz = result.getInt(1);
+                String gruz_name= result.getString(2);
+                String danger= result.getString(3);
+                Double price= result.getDouble(4);
+                Double volume= result.getDouble(5);
+                cargos.add(new Cargo(gruz_name,danger,price,volume,id_gruz));
+            }
+            result.close();
+            stm.close();
+            con.close();
+        } catch (Exception ex) {
+
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+
+        }
+        return cargos;
+    }
+    ///////////////ОТГРУЗКА
+    //ВЫВОД ОТГРУЗКИ
+    public static ArrayList<Shipment> shipment() {
+        ArrayList<Shipment> shipments=new ArrayList<Shipment>();
+        Connection con = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            con = DriverManager.getConnection(URL, username, password);
+            Statement stm = con.createStatement();
+            String sql = "SELECT id_shipment,date_shipment,id_shipping,id_loader FROM shipment";
+            ResultSet result = stm.executeQuery(sql);
+
+            while (result.next()) {
+                Integer id_shipment = result.getInt(1);
+                String date_shipment = result.getString(2);
+                Integer id_shipping = result.getInt(3);
+                Integer id_loader = result.getInt(4);
+               /* String sql2 = "SELECT * from shipping where id_shipping= " + id_shipping + ";";
+                ResultSet result2 = stm.executeQuery(sql2);
+                while (result2.next()) {
+                    Integer id_shipm = result.getInt(1);
+                    String date_shipm = result.getString(2);
+                    Integer numb = result.getInt(3);
+                    Double volum = result.getDouble(4);
+                    Double pric = result.getDouble(5);
+                    Integer id_shipp = result.getInt(6);
+                    Integer id_load = result.getInt(7);
+                    String sql3 = "SELECT * from loader where id_loader= " + id_loader + ";";
+                    ResultSet result3 = stm.executeQuery(sql3);
+                    while (result3.next()) {
+                        Integer id_ship = result.getInt(1);
+                        String date_ship = result.getString(2);
+                        Integer num = result.getInt(3);
+                        Double vol = result.getDouble(4);
+                        Double pr = result.getDouble(5);
+                        Integer id_shi = result.getInt(6);
+                        Integer id_loa = result.getInt(7);
+                    }
+
+                }*/
+                shipments.add(new Shipment(id_shipment, date_shipment,id_shipping,id_loader ));
+            }
+
+            result.close();
+            stm.close();
+            con.close();
+        } catch (Exception ex) {
+
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+
+        }
+        return shipments;
+    }
+    //ДОБАВЛЕНИЕ ОТГРУЗКИ
+    public static void add_shipment(String date_shipment,int id_shipping, int id_loader) throws SQLException {
+        Connection con = DriverManager.getConnection(URL, username, password);
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "INSERT INTO shipment (date_shipment,id_shipping,id_loader) VALUES('" + date_shipment + "'," + id_shipping + "," + id_loader + ");";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //РЕДАКТИРОВАНИЕ ОТГРУЗКИ
+
+    public static void edit_shipment(int id_shipment,String date_shipment,int id_shipping, int id_loader) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "UPDATE shipment set date_shipment = '" + date_shipment + "',id_shipping="+ id_shipping + ",id_loader=" + id_loader + "  where id_shipment=" + id_shipment +";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    ////УДАЛЕНИЕ ОТГРУЗКИ
+    public static void delete_shipment(Integer id_shipment) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "Delete  from shipment where id_shipment="+ id_shipment+";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    ///////////////ПЕРЕВОЗКА
+    //ВЫВОД ПЕРЕВОЗКИ
+    public static ArrayList<Shipping> shippings() {
+        ArrayList<Shipping> shippings=new ArrayList<Shipping>();
+        Connection con = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            con = DriverManager.getConnection(URL, username, password);
+            Statement stm = con.createStatement();
+            String sql = "SELECT id_shipping,id_route,id_client,id_cargo,id_driver,id_car FROM shipping";
+            ResultSet result = stm.executeQuery(sql);
+
+            while (result.next()) {
+                Integer id_shipping = result.getInt(1);
+                Integer id_route = result.getInt(2);
+                Integer id_client = result.getInt(3);
+                Integer id_cargo = result.getInt(4);
+                Integer id_driver = result.getInt(5);
+                Integer id_car = result.getInt(6);
+               /* String sql2 = "SELECT * from route where id_route= " + id_route + ";";
+                ResultSet result2 = stm.executeQuery(sql2);
+                while (result2.next()) {
+                    Integer id_shippin = result.getInt(1);
+                    Integer id_rout = result.getInt(2);
+                    Integer id_clien = result.getInt(3);
+                    Integer id_carg = result.getInt(4);
+                    Integer id_drive = result.getInt(5);
+                    Integer id_ca = result.getInt(6);
+                    String sql3 = "SELECT * from client where id_client= " + id_client + ";";
+                    ResultSet result3 = stm.executeQuery(sql3);
+                    while (result3.next()) {
+                        Integer id_shippi = result.getInt(1);
+                        Integer id_rou = result.getInt(2);
+                        Integer id_clie = result.getInt(3);
+                        Integer id_caro = result.getInt(4);
+                        Integer id_driv = result.getInt(5);
+                        Integer id_c = result.getInt(6);
+                        String sql4 = "SELECT * from cargo where id_cargo= " + id_cargo + ";";
+                        ResultSet result4 = stm.executeQuery(sql4);
+                        while (result4.next()) {
+                            Integer id_shipp = result.getInt(1);
+                            Integer id_ro = result.getInt(2);
+                            Integer id_cli = result.getInt(3);
+                            Integer id_cargoo = result.getInt(4);
+                            Integer id_dri = result.getInt(5);
+                            Integer id = result.getInt(6);
+                            String sql5 = "SELECT * from drivers where id_driver= " + id_driver + ";";
+                            ResultSet result5 = stm.executeQuery(sql5);
+                            while (result5.next()) {
+                                Integer id_ship = result.getInt(1);
+                                Integer id_r = result.getInt(2);
+                                Integer id_cl = result.getInt(3);
+                                Integer id_caroo = result.getInt(4);
+                                Integer id_dr = result.getInt(5);
+                                Integer car_id = result.getInt(6);
+                                String sql6 = "SELECT * from auto where id_car= " + id_car + ";";
+                                ResultSet result6 = stm.executeQuery(sql6);
+                                while (result6.next()) {
+                                    Integer id_shi = result.getInt(1);
+                                    Integer route = result.getInt(2);
+                                    Integer client = result.getInt(3);
+                                    Integer cargo = result.getInt(4);
+                                    Integer driver = result.getInt(5);
+                                    Integer car = result.getInt(6);
+                                }
+                            }
+                           } }
+                        }*/
+
+
+                shippings.add(new Shipping(id_shipping, id_route, id_client, id_cargo, id_driver, id_car));
+            }
+
+            result.close();
+            stm.close();
+            con.close();
+        } catch (Exception ex) {
+
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+
+        }
+        return shippings;
+    }
+    //ДОБАВЛЕНИЕ ПЕРЕВОЗКИ
+    public static void add_shipping(int id_route, int id_cargo, int id_client, int id_driver, int id_car) throws SQLException {
+        Connection con = DriverManager.getConnection(URL, username, password);
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "INSERT INTO shipping (id_route,id_client,id_cargo,id_driver,id_car) VALUES(" + id_route + "," + id_client + ","+ id_cargo + "," + id_driver + "," + id_car  + ");";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    //РЕДАКТИРОВАНИЕ ПЕРЕВОЗКИ
+
+    public static void edit_shipping(int id_route, int id_cargo, int id_client, int id_driver, int id_car, int id_shipping) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "UPDATE shipping set id_route = " + id_route + ", id_cargo=" + id_cargo + ", id_client= " + id_client + ",id_driver=" + id_driver + ",id_car="+ id_car +  "  where id_shipping=" + id_shipping +";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+    ////УДАЛЕНИЕ ПЕРЕВОЗКИ
+    public static void delete_shipping(Integer id_shipping) throws SQLException {
+
+        try {
+            Connection con = DriverManager.getConnection(URL, username, password);
+            Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+            Statement stm = con.createStatement();
+            String sql = "Delete  from shipping where id_shipping="+ id_shipping+";";
+            stm.executeUpdate(sql);
+        } catch (Exception ex) {
+            System.out.println("Выполнить транзакцию не удалось");
+            System.out.println(ex.getMessage());
+
+        }
+
+    }
+
+}
